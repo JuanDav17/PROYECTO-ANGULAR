@@ -1,28 +1,71 @@
-# Angular specific
-/dist/
-/out-tsc/
-/tmp/
-/coverage/
-/e2e/test-output/
-/.angular/
-.angular/
+# --------------------
+# 1. SEGURIDAD (Archivos críticos a IGNORAR)
+# --------------------
 
-# Node modules and dependency files
-/node_modules/
-/package-lock.json
-/yarn.lock
+# Variables de entorno (Contienen claves, contraseñas, etc.)
+.env
+.env.*
 
-# Environment files
-/.env
+# Volúmenes de datos y directorios de persistencia local de Docker
+/data/db
+/mysql/data
+/uploads
+/build/
 
-# Angular CLI and build artefacts
-/.angular-cli.json
-/.ng/
+# --------------------
+# 2. FRONTEND (Angular - Con rutas ajustadas)
+# --------------------
 
-# TypeScript cache
-*.tsbuildinfo
+# Salidas compiladas (dist, tmp, etc.)
+frontend/dist
+frontend/tmp
+frontend/out-tsc
+frontend/bazel-out
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Dependencias y Logs
+frontend/node_modules
+frontend/npm-debug.log
+frontend/yarn-error.log
+frontend/.angular/cache
+frontend/.sass-cache/
+frontend/connect.lock
+frontend/coverage
+frontend/libpeerconnection.log
+frontend/testem.log
+frontend/typings
+
+# --------------------
+# 3. BACKEND (Node/Python - Exclusiones añadidas)
+# --------------------
+
+# Dependencias
+backend/node_modules
+backend/vendor
+backend/build
+backend/*.log
+backend/storage/logs
+
+# --------------------
+# 4. IDEs y Sistema Operativo (Archivos personales y temporales)
+# --------------------
+
+# IDEs y editors (Aplicado a la raíz o subcarpetas)
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# System files
+.DS_Store
+Thumbs.db
