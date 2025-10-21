@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 2. Instala dependencias del proyecto
-RUN npm install 
+RUN npm install -g @angular/cli@16.2.10 
 
 # 3. Copia el resto del proyecto (angular.json, src, etc.)
 COPY . .

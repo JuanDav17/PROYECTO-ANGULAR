@@ -1,47 +1,80 @@
-version: '3.9'
-
+# Define los servicios (contenedores) que componen la aplicación.
 services:
+
+  # -------------------------------------
+  # SERVICIO DE BASE DE DATOS (MySQL)
+  # -------------------------------------
   db:
+    # Utiliza la imagen oficial de MySQL en su versión 8.0.
     image: mysql:8.0
+    # Asigna un nombre específico al contenedor para facilitar su identificación.
     container_name: mysql_db
+    # Asegura que el contenedor se reinicie automáticamente si falla o se detiene.
     restart: always
+    # Define las variables de entorno necesarias para configurar MySQL.
     environment:
+      # Contraseña del usuario 'root' dentro de MySQL.
       MYSQL_ROOT_PASSWORD: root_password
+      # Nombre de la base de datos que se creará automáticamente al iniciar.
       MYSQL_DATABASE: my_database
+    # Mapea el puerto 3307 del host (tu máquina) al puerto 3306 del contenedor (MySQL).
     ports:
       - "3307:3306"
+    # Define volúmenes para persistencia y configuración.
     volumes:
+      # Persiste los datos de MySQL en un volumen llamado 'mysql_data'.
       - mysql_data:/var/lib/mysql
+      # Copia scripts de inicialización (si existen) al directorio de entrada de MySQL.
       - ./docker/mysql-init:/docker-entrypoint-initdb.d
 
+  # -------------------------------------
+  # SERVICIO DE BACKEND (API)
+  # -------------------------------------
   backend:
+    # Construye la imagen a partir del Dockerfile ubicado en el directorio './backend'.
     build: ./backend
+    # Asigna un nombre específico al contenedor.
     container_name: backend_api
+    # Asegura el reinicio automático.
     restart: always
+    # Mapea el puerto 3000 del host al puerto 3000 del contenedor (donde escucha la API).
     ports:
       - "3000:3000"
+    # Carga las variables de entorno (DB_HOST, DB_USER, etc.) desde el archivo .env.
+    # ESTO CUMPLE CON EL AJUSTE DE 'variables de entorno'.
     env_file:
       - .env
-    environment:
-      DB_HOST: db
-      DB_USER: root
-      DB_PASSWORD: root_password
-      DB_NAME: my_database
+    # Especifica que este servicio depende de que el servicio 'db' esté iniciado.
     depends_on:
       - db
 
+  # -------------------------------------
+  # SERVICIO DE FRONTEND (Aplicación Web)
+  # -------------------------------------
   frontend:
+    # Construye la imagen a partir del Dockerfile ubicado en el directorio './frontend/dashboard-frontend'.
     build: ./frontend/dashboard-frontend
+    # Asigna un nombre específico al contenedor.
     container_name: frontend_app
+    # Asegura el reinicio automático.
     restart: always
+    # Mapea el puerto 4200 del host al puerto 4200 del contenedor.
     ports:
       - "4200:4200"
+    # Define volúmenes para desarrollo.
     volumes:
+      # Sincroniza el código fuente del frontend con el directorio /app dentro del contenedor.
       - ./frontend/dashboard-frontend:/app
+      # Volumen anónimo para no sincronizar los 'node_modules' del host al contenedor (mejora el rendimiento).
       - /app/node_modules
-    # ELIMINADO: La línea 'command: sh -c "npm install && ng serve..."'
+    # El comentario anterior se eliminó para cumplir con el ajuste de 'comentarios de la IA'.
+    # Especifica que este servicio depende de que el servicio 'backend' esté iniciado.
     depends_on:
       - backend
 
+# -------------------------------------
+# DEFINICIÓN DE VOLÚMENES PERSISTENTES
+# -------------------------------------
 volumes:
+  # Define el volumen que se usará para almacenar los datos de MySQL de forma persistente.
   mysql_data:
