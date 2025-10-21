@@ -1,0 +1,83 @@
+.productos-container {
+  max-width: 900px;
+  margin: 50px auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+.formulario {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 25px;
+  justify-content: center;
+}
+
+input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 180px;
+  outline: none;
+}
+
+.btn-agregar {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-agregar:hover {
+  background-color: #218838;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+th {
+  background-color: #007bff;
+  color: white;
+  padding: 10px;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.acciones i {
+  margin: 0 5px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.icon-edit {
+  color: #ffc107;
+}
+
+.icon-edit:hover {
+  color: #e0a800;
+}
+
+.icon-delete {
+  color: #dc3545;
+}
+
+.icon-delete:hover {
+  color: #c82333;
+}

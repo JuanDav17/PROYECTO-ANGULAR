@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f6f8fa;
+  color: #333;
+}
+
+/* Centrar el contenido principal */
+.container-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* Reutilizable para formularios */
+.form-card {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}

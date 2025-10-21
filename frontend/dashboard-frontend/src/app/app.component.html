@@ -1,0 +1,19 @@
+<nav class="navbar">
+  <div class="nav-left">
+    <span class="logo">🩺 Mi Panel</span>
+  </div>
+  <div class="nav-right">
+    
+    <ng-container *ngIf="!isLoggedIn()"> 
+      <a routerLink="/login" routerLinkActive="active"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+      <a routerLink="/register" routerLinkActive="active"><i class="bi bi-person-plus"></i> Registro</a>
+    </ng-container>
+
+    <a routerLink="/productos" *ngIf="isLoggedIn()">Productos</a>
+    <a (click)="logout()" *ngIf="isLoggedIn()" style="cursor: pointer;" routerLinkActive="active">
+      <i class="bi bi-box-arrow-left"></i> Logout
+    </a>
+  </div>
+</nav>
+
+<router-outlet></router-outlet>

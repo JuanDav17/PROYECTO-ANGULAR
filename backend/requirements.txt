@@ -1,0 +1,5 @@
+fastapi
+mysql-connector-python
+python-dotenv
+uvicorn
+bcrypt
