@@ -1,19 +1,25 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from datetime import datetime
 
 class UsuarioCreate(BaseModel):
     nombre: str
-    email: str
+    email: EmailStr
     password: str
+    rol: Optional[str] = "usuario"
 
 class UsuarioResponse(BaseModel):
     id: int
     nombre: str
     email: str
     rol: str
-
-    class Config:
-        from_attributes = True
+    activo: bool
+    created_at: datetime
 
 class LoginRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
+
+class LoginResponse(BaseModel):
+    token: str
+    usuario: UsuarioResponse

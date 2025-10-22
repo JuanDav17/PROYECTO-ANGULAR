@@ -1,8 +1,9 @@
-FROM node:18-alpine
+FROM node:16-alpine
 WORKDIR /app
 
 # 1. Copia solo package.json y package-lock.json
 COPY package*.json ./
+RUN npm install
 
 # 2. Instala dependencias del proyecto
 RUN npm install -g @angular/cli@16.2.10 

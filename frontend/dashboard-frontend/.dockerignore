@@ -1,0 +1,10 @@
+# Ignorar dependencias de Node
+node_modules
+
+# Ignorar logs
+npm-debug.log
+yarn-error.log
+
+# Ignorar carpetas de build/cache de Angular
+dist
+.angular/cache
