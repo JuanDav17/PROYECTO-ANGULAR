@@ -1,29 +1,39 @@
 # main.py
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware # <--- NUEVA IMPORTACIÓN
-from routers import productos, usuarios
+from fastapi.middleware.cors import CORSMiddleware
+from routers import productos, usuarios, pedidos, ventas
 
-app = FastAPI(title="API Gutkleid", version="1.0")
+app = FastAPI(title="API Gutkleid", version="2.0")
 
-# 1. DEFINICIÓN DE ORÍGENES PERMITIDOS
+# Configuración CORS
 origins = [
-    "http://localhost:4200",  # El origen de tu aplicación Angular
+    "http://localhost:4200",
     "http://127.0.0.1:4200",
 ]
 
-# 2. AGREGAR EL MIDDLEWARE CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,      # Permite la comunicación desde tu frontend
-    allow_credentials=True,     # Permite cookies/tokens
-    allow_methods=["*"],        # Permite todos los métodos (GET, POST, PUT, DELETE)
-    allow_headers=["*"],        # Permite todos los encabezados
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Agregamos los routers
-app.include_router(productos.router)
+# Incluir routers
 app.include_router(usuarios.router)
+app.include_router(productos.router)
+app.include_router(pedidos.router)
+app.include_router(ventas.router)
 
 @app.get("/")
 def root():
-    return {"message": "API funcionando correctamente"}
+    return {
+        "message": "API Gutkleid - Sistema de Roles",
+        "version": "2.0",
+        "endpoints": {
+            "usuarios": "/usuarios",
+            "productos": "/productos",
+            "pedidos": "/pedidos",
+            "ventas": "/ventas"
+        }
+    }

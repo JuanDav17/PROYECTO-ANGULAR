@@ -5,3 +5,4 @@ uvicorn
 bcrypt
 pyjwt
 passlib[bcrypt]
+email-validator
