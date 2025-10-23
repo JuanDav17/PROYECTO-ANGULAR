@@ -7,16 +7,23 @@ import { Usuario } from '../models/usuario.model';
   providedIn: 'root'
 })
 export class UsuarioService {
-
-  private apiUrl = 'http://localhost:3000/usuarios'; // URL del backend FastAPI
+  private apiUrl = 'http://localhost:3000/usuarios';
 
   constructor(private http: HttpClient) {}
 
-  registrar(usuario: Usuario): Observable<any> {
-    return this.http.post(${this.apiUrl}/registro, usuario);
+  listarUsuarios(): Observable<Usuario[]> {
+    return this.http.get<Usuario[]>(this.apiUrl);
   }
 
-  login(email: string, password: string): Observable<any> {
-    return this.http.post(${this.apiUrl}/login, { email, password });
+  cambiarRol(usuarioId: number, nuevoRol: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${usuarioId}/rol`, null, {
+      params: { nuevo_rol: nuevoRol }
+    });
+  }
+
+  cambiarEstado(usuarioId: number, activo: boolean): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${usuarioId}/estado`, null, {
+      params: { activo: activo.toString() }
+    });
   }
 }

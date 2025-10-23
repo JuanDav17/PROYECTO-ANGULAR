@@ -1,15 +1,8 @@
-// Pega este contenido en src/app/components/productos/productos.component.ts
-
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-
-interface Producto {
-  id?: number;
-  nombre: string;
-  descripcion?: string;
-  precio: number;
-  cantidad: number;
-}
+import { Router } from '@angular/router';
+import { ProductoService } from '../../services/producto.service';
+import { AuthService } from '../../services/auth.service';
+import { Producto } from '../../models/producto.model';
 
 @Component({
   selector: 'app-productos',
@@ -18,79 +11,207 @@ interface Producto {
 })
 export class ProductosComponent implements OnInit {
   productos: Producto[] = [];
-  nuevoProducto: Producto = { nombre: '', descripcion: '', precio: 0, cantidad: 0 };
+  productosFiltrados: Producto[] = [];
+  loading = false;
+  error = '';
+  searchTerm = '';
 
-  private apiUrl = 'http://localhost:3000/productos'; 
+  // Para el modal de agregar/editar
+  showModal = false;
+  isEditMode = false;
+  productoForm: Producto = this.getEmptyProducto();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private productoService: ProductoService,
+    public authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    this.obtenerProductos();
+    this.cargarProductos();
   }
 
-  obtenerProductos() {
-    this.http.get<Producto[]>(this.apiUrl).subscribe({
-      next: (data) => (this.productos = data),
-      error: (err) => console.error('Error al obtener productos:', err)
-    });
+  get currentUser() {
+    return this.authService.currentUserValue;
   }
 
-  agregarProducto() {
-    this.http.post<Producto>(this.apiUrl, this.nuevoProducto).subscribe({
+  get isVendedor(): boolean {
+    return this.authService.isVendedor;
+  }
+
+  get isAdmin(): boolean {
+    return this.authService.isAdmin;
+  }
+
+  get canManageProducts(): boolean {
+    return this.isVendedor || this.isAdmin;
+  }
+
+  cargarProductos(): void {
+    this.loading = true;
+    this.error = '';
+
+    this.productoService.obtenerProductos().subscribe({
       next: (data) => {
-        this.productos.push(data);
-        this.nuevoProducto = { nombre: '', descripcion: '', precio: 0, cantidad: 0 };
+        this.productos = data;
+        this.productosFiltrados = data;
+        this.loading = false;
       },
-      error: (err) => console.error('Error al agregar producto:', err)
+      error: (err) => {
+        console.error('Error al cargar productos:', err);
+        this.error = 'Error al cargar productos';
+        this.loading = false;
+      }
     });
   }
 
-  editarProducto(producto: Producto) {
-    // Pedir los nuevos valores, usando los actuales como predeterminados
-    const nuevoNombre = prompt('Nuevo nombre:', producto.nombre);
-    const nuevaDescripcion = prompt('Nueva descripción:', producto.descripcion || '');
-    const nuevoPrecioStr = prompt('Nuevo precio:', producto.precio.toString());
-    const nuevaCantidadStr = prompt('Nueva cantidad:', producto.cantidad.toString());
-
-    // Comprobar si el usuario canceló
-    if (nuevoNombre === null || nuevaDescripcion === null || nuevoPrecioStr === null || nuevaCantidadStr === null) {
-      alert('Edición cancelada.');
+  buscarProductos(): void {
+    if (!this.searchTerm.trim()) {
+      this.productosFiltrados = this.productos;
       return;
     }
 
-    // Conversión y validación de números
-    const nuevoPrecio = parseFloat(nuevoPrecioStr);
-    const nuevaCantidad = parseInt(nuevaCantidadStr, 10);
+    const term = this.searchTerm.toLowerCase();
+    this.productosFiltrados = this.productos.filter(p => 
+      p.nombre.toLowerCase().includes(term) ||
+      (p.descripcion && p.descripcion.toLowerCase().includes(term))
+    );
+  }
 
-    if (isNaN(nuevoPrecio) || isNaN(nuevaCantidad) || nuevoPrecio < 0 || nuevaCantidad < 0) {
-        alert('Error: Precio o cantidad inválidos.');
-        return;
+  getEmptyProducto(): Producto {
+    return {
+      nombre: '',
+      descripcion: '',
+      precio: 0,
+      cantidad: 0
+    };
+  }
+
+  abrirModalAgregar(): void {
+    this.isEditMode = false;
+    this.productoForm = this.getEmptyProducto();
+    this.showModal = true;
+  }
+
+  abrirModalEditar(producto: Producto): void {
+    // Verificar permisos
+    if (!this.puedeEditarProducto(producto)) {
+      alert('No tienes permisos para editar este producto');
+      return;
     }
 
-    // Crear el objeto actualizado con todos los campos
-    const actualizado = { 
-        ...producto, 
-        nombre: nuevoNombre,
-        descripcion: nuevaDescripcion,
-        precio: nuevoPrecio,
-        cantidad: nuevaCantidad
-    };
+    this.isEditMode = true;
+    this.productoForm = { ...producto };
+    this.showModal = true;
+  }
 
-    // Enviar la solicitud PUT
-    this.http.put(`${this.apiUrl}/${producto.id}`, actualizado).subscribe({
+  cerrarModal(): void {
+    this.showModal = false;
+    this.productoForm = this.getEmptyProducto();
+  }
+
+  guardarProducto(): void {
+    if (!this.validarFormulario()) {
+      return;
+    }
+
+    this.loading = true;
+
+    if (this.isEditMode && this.productoForm.id) {
+      // Actualizar
+      this.productoService.actualizarProducto(this.productoForm.id, this.productoForm)
+        .subscribe({
+          next: () => {
+            this.cerrarModal();
+            this.cargarProductos();
+            this.loading = false;
+          },
+          error: (err) => {
+            console.error('Error al actualizar:', err);
+            alert('Error al actualizar producto');
+            this.loading = false;
+          }
+        });
+    } else {
+      // Crear
+      this.productoService.agregarProducto(this.productoForm)
+        .subscribe({
+          next: () => {
+            this.cerrarModal();
+            this.cargarProductos();
+            this.loading = false;
+          },
+          error: (err) => {
+            console.error('Error al crear:', err);
+            alert('Error al crear producto');
+            this.loading = false;
+          }
+        });
+    }
+  }
+
+  eliminarProducto(producto: Producto): void {
+    if (!this.puedeEditarProducto(producto)) {
+      alert('No tienes permisos para eliminar este producto');
+      return;
+    }
+
+    if (!confirm(`¿Estás seguro de eliminar "${producto.nombre}"?`)) {
+      return;
+    }
+
+    if (!producto.id) return;
+
+    this.productoService.eliminarProducto(producto.id).subscribe({
       next: () => {
-          alert(`Producto "${nuevoNombre}" actualizado con éxito.`);
-          this.obtenerProductos(); 
+        this.cargarProductos();
       },
-      error: (err) => console.error('Error al editar producto:', err)
+      error: (err) => {
+        console.error('Error al eliminar:', err);
+        alert('Error al eliminar producto');
+      }
     });
   }
 
-  eliminarProducto(id?: number) {
-    if (!id || !confirm('¿Seguro que deseas eliminar este producto?')) return;
-    this.http.delete(`${this.apiUrl}/${id}`).subscribe({
-      next: () => this.obtenerProductos(),
-      error: (err) => console.error('Error al eliminar producto:', err)
-    });
+  puedeEditarProducto(producto: Producto): boolean {
+    if (this.isAdmin) return true;
+    if (this.isVendedor && producto.vendedor_id === this.currentUser?.id) return true;
+    return false;
+  }
+
+  validarFormulario(): boolean {
+    if (!this.productoForm.nombre.trim()) {
+      alert('El nombre es requerido');
+      return false;
+    }
+    if (this.productoForm.precio <= 0) {
+      alert('El precio debe ser mayor a 0');
+      return false;
+    }
+    if (this.productoForm.cantidad < 0) {
+      alert('La cantidad no puede ser negativa');
+      return false;
+    }
+    return true;
+  }
+
+  irAMisProductos(): void {
+    this.router.navigate(['/vendedor/mis-productos']);
+  }
+
+  irADashboard(): void {
+    if (this.isAdmin) {
+      this.router.navigate(['/admin/dashboard']);
+    } else if (this.isVendedor) {
+      this.router.navigate(['/vendedor/dashboard']);
+    } else {
+      this.router.navigate(['/comprador/catalogo']);
+    }
+  }
+
+  logout(): void {
+    if (confirm('¿Deseas cerrar sesión?')) {
+      this.authService.logout();
+    }
   }
 }

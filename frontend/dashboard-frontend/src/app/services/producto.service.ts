@@ -7,24 +7,33 @@ import { Producto } from '../models/producto.model';
   providedIn: 'root'
 })
 export class ProductoService {
-
-  private apiUrl = 'http://localhost:3000/productos'; // URL del backend FastAPI
+  private apiUrl = 'http://localhost:3000/productos';
 
   constructor(private http: HttpClient) {}
 
-  obtenerProductos(): Observable<Producto[]> {
-    return this.http.get<Producto[]>(this.apiUrl);
+  obtenerProductos(activosSolo: boolean = true): Observable<Producto[]> {
+    return this.http.get<Producto[]>(this.apiUrl, {
+      params: { activos_solo: activosSolo.toString() }
+    });
   }
 
-  agregarProducto(producto: Producto): Observable<any> {
-    return this.http.post(this.apiUrl, producto);
+  obtenerProducto(id: number): Observable<Producto> {
+    return this.http.get<Producto>(`${this.apiUrl}/${id}`);
   }
 
-  actualizarProducto(id: number, producto: Producto): Observable<any> {
-    return this.http.put(${this.apiUrl}/${id}, producto);
+  obtenerMisProductos(): Observable<Producto[]> {
+    return this.http.get<Producto[]>(`${this.apiUrl}/mis-productos`);
+  }
+
+  agregarProducto(producto: Producto): Observable<Producto> {
+    return this.http.post<Producto>(this.apiUrl, producto);
+  }
+
+  actualizarProducto(id: number, producto: Partial<Producto>): Observable<Producto> {
+    return this.http.put<Producto>(`${this.apiUrl}/${id}`, producto);
   }
 
   eliminarProducto(id: number): Observable<any> {
-    return this.http.delete(${this.apiUrl}/${id});
+    return this.http.delete(`${this.apiUrl}/${id}`);
   }
 }

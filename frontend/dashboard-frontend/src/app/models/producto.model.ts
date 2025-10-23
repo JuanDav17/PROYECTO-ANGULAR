@@ -4,5 +4,8 @@ export interface Producto {
   descripcion?: string;
   precio: number;
   cantidad: number;
-  created_at?: string;
+  vendedor_id?: number;
+  vendedor_nombre?: string;
+  activo?: boolean;
+  created_at?: Date;
 }

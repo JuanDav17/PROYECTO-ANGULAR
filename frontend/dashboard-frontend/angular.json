@@ -30,7 +30,7 @@
               "src/assets"
             ],
        "styles": [
-    "src/styles.scss" // <-- ¡Confirma que este archivo existe con este nombre!
+    "src/styles.scss" 
   ],
   "scripts": [
   ]

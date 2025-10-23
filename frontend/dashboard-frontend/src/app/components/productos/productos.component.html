@@ -1,39 +1,167 @@
 <div class="productos-container">
-  <h2>Gestión de Productos</h2>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <h1>Catálogo de Productos</h1>
+      <div class="user-info">
+        <span class="user-name">{{ currentUser?.nombre }}</span>
+        <span class="user-role" [class]="currentUser?.rol">{{ currentUser?.rol }}</span>
+        <button class="btn-logout" (click)="logout()">Cerrar Sesión</button>
+      </div>
+    </div>
+  </header>
 
-  <form (ngSubmit)="agregarProducto()" class="formulario">
-    <input type="text" [(ngModel)]="nuevoProducto.nombre" name="nombre" placeholder="Nombre" required />
-    <input type="text" [(ngModel)]="nuevoProducto.descripcion" name="descripcion" placeholder="Descripción" />
-    <input type="number" [(ngModel)]="nuevoProducto.precio" name="precio" placeholder="Precio" required />
-    <input type="number" [(ngModel)]="nuevoProducto.cantidad" name="cantidad" placeholder="Cantidad" required />
-    <button type="submit" class="btn-agregar">
-      <i class="bi bi-plus-circle"></i> Agregar
-    </button>
-  </form>
+  <!-- Actions Bar -->
+  <div class="actions-bar">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Buscar productos..." 
+        [(ngModel)]="searchTerm"
+        (input)="buscarProductos()"
+      />
+    </div>
+    
+    <div class="actions-buttons">
+      <button 
+        *ngIf="canManageProducts" 
+        class="btn btn-primary"
+        (click)="abrirModalAgregar()"
+      >
+        + Nuevo Producto
+      </button>
+      
+      <button 
+        *ngIf="isVendedor"
+        class="btn btn-secondary"
+        (click)="irAMisProductos()"
+      >
+        Mis Productos
+      </button>
 
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Descripción</th>
-        <th>Precio</th>
-        <th>Cantidad</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let producto of productos">
-        <td>{{ producto.id }}</td>
-        <td>{{ producto.nombre }}</td>
-        <td>{{ producto.descripcion }}</td>
-        <td>${{ producto.precio }}</td>
-        <td>{{ producto.cantidad }}</td>
-        <td class="acciones">
-          <i class="bi bi-pencil-square icon-edit" (click)="editarProducto(producto)"></i>
-          <i class="bi bi-trash3 icon-delete" (click)="eliminarProducto(producto.id)"></i>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+      <button 
+        class="btn btn-secondary"
+        (click)="irADashboard()"
+      >
+        Dashboard
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner-large"></div>
+    <p>Cargando productos...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <!-- Lista de Productos -->
+  <div *ngIf="!loading && !error" class="productos-grid">
+    <div *ngIf="productosFiltrados.length === 0" class="no-products">
+      <p>No se encontraron productos</p>
+    </div>
+
+    <div 
+      *ngFor="let producto of productosFiltrados" 
+      class="producto-card"
+      [class.sin-stock]="producto.cantidad === 0"
+    >
+      <div class="producto-header">
+        <h3>{{ producto.nombre }}</h3>
+        <span class="producto-precio">${{ producto.precio | number:'1.2-2' }}</span>
+      </div>
+
+      <div class="producto-body">
+        <p class="producto-descripcion">{{ producto.descripcion || 'Sin descripción' }}</p>
+        
+        <div class="producto-info">
+          <span class="stock" [class.sin-stock]="producto.cantidad === 0">
+            Stock: {{ producto.cantidad }}
+          </span>
+          <span *ngIf="producto.vendedor_nombre" class="vendedor">
+            Vendedor: {{ producto.vendedor_nombre }}
+          </span>
+        </div>
+      </div>
+
+      <div class="producto-actions" *ngIf="puedeEditarProducto(producto)">
+        <button class="btn-edit" (click)="abrirModalEditar(producto)">
+          Editar
+        </button>
+        <button class="btn-delete" (click)="eliminarProducto(producto)">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Agregar/Editar -->
+  <div *ngIf="showModal" class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ isEditMode ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
+        <button class="btn-close" (click)="cerrarModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre</label>
+          <input 
+            type="text" 
+            [(ngModel)]="productoForm.nombre"
+            class="form-control"
+            placeholder="Nombre del producto"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea 
+            [(ngModel)]="productoForm.descripcion"
+            class="form-control"
+            rows="3"
+            placeholder="Descripción del producto"
+          ></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Precio</label>
+            <input 
+              type="number" 
+              [(ngModel)]="productoForm.precio"
+              class="form-control"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Cantidad</label>
+            <input 
+              type="number" 
+              [(ngModel)]="productoForm.cantidad"
+              class="form-control"
+              min="0"
+              placeholder="0"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarModal()">
+          Cancelar
+        </button>
+        <button class="btn btn-primary" (click)="guardarProducto()" [disabled]="loading">
+          {{ isEditMode ? 'Actualizar' : 'Crear' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
